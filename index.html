@@ -427,7 +427,32 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+
+import {
+    getFirestore,
+    doc,
+    setDoc,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAi_YtSmzGzJO9-gnPeaQUoAVcZcK_tMSA",
+    authDomain: "compra-lista-96849.firebaseapp.com",
+    projectId: "compra-lista-96849",
+    storageBucket: "compra-lista-96849.firebasestorage.app",
+    messagingSenderId: "149778882937",
+    appId: "1:149778882937:web:73a7b0f281eb86872b8fa8"
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const listaRef = doc(db, "listas", "principal");
         const habitualProducts = [
             { id: 'jamon', name: 'Jamon', icon: '🥓', category: 'carnes' },
             { id: 'queso', name: 'Queso', icon: '🧀', category: 'lacteos' },
@@ -594,6 +619,12 @@
 
         let basket = {};
 
+async function guardarLista() {
+    await setDoc(listaRef, {
+        basket: basket
+    });
+}
+
         function setNextWeekDate() {
             const today = new Date();
             const currentDay = today.getDay(); 
@@ -661,6 +692,7 @@
                 basket[id] = { name, icon, qty: 1, category };
             }
             renderBasket();
+guardarLista();
         }
 
         function updateQty(id, change) {
@@ -670,11 +702,13 @@
                 delete basket[id];
             }
             renderBasket();
+guardarLista();
         }
 
         function deleteItem(id) {
             delete basket[id];
             renderBasket();
+guardarLista();
         }
 
         function addCustomItem() {
@@ -709,9 +743,10 @@
         }
 
         function clearAll() {
-            basket = {};
-            renderBasket();
-            alert('¡Lista archivada como completada!');
+           basket = {};
+renderBasket();
+guardarLista();
+alert('¡Lista archivada como completada!');
         }
 
         document.getElementById('custom-input').addEventListener('keypress', function(e) {
@@ -719,10 +754,32 @@
                 addCustomItem();
             }
         });
+window.addToBasket = addToBasket;
+window.updateQty = updateQty;
+window.deleteItem = deleteItem;
+window.clearAll = clearAll;
+window.addCustomItem = addCustomItem;
+        
+setNextWeekDate();
+renderHabituals();
 
-        setNextWeekDate();
-        renderHabituals();
+
+onSnapshot(listaRef, (docSnap) => {
+
+    if (docSnap.exists()) {
+
+        const data = docSnap.data();
+
+        basket = data.basket || {};
+
         renderBasket();
+
+    }
+
+});
+
+
+renderBasket();
     </script>
 </body>
 </html>
